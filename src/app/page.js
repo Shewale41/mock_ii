@@ -1,14 +1,13 @@
+import { Button } from "../components/ui/button";
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge"
-
+import Header from "./dashboard/_components/Header";   
 
 export default function Home() {
   return (
-   <>
-   <div>
-    <h2>Hello Pomello</h2>
-    <Badge>New</Badge>
-   </div>
-   </>
+          <div>
+            <Header />
+          </div>
+    
+        
   );
 }
