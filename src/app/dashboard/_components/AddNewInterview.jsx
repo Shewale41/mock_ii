@@ -18,9 +18,16 @@ function AddNewInterview() {
     const [jobDesc,setJobDesc]=useState('');
     const [experience,setExperience]=useState('');
 
-    const onSubmit=(e)=>{
+    const onSubmit=async(e)=>{
         e.preventDefault();
         console.log(jobDesc,jobRole,experience)
+
+        const inputPrompt = 'job role:' +jobRole+ ', job description:' + jobDesc + ', job experience:' + experience + '. based on the job position , job description , job experience give me '+process.env.NEXT_PUBLIC_INTERVIEW_QUESTION_COUNT+' questions and answers of that in json format .Give Question and answer field in Json. ';
+
+        const result = await startInterviewSession().sendMessage(inputPrompt);
+
+        console.log(result.response.text());
+
     }
 
   return (<>
