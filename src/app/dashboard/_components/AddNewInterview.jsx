@@ -1,26 +1,65 @@
 "use client"
-import React, { useState } from 'react'
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Button } from '@/components/ui/button';
+  DialogTitle
+} from "@/components/ui/dialog";
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { startInterviewSession } from '@/utils/AiModel';
+import { useState } from 'react';
+import { db } from '../../../../utils/db';
+import { MockInterviewSchema } from '../../../../utils/schema';
+import { v4 as uuidv4 } from 'uuid';
+import moment from 'moment';
+
 
 function AddNewInterview() {
     const [openDialog,setOpenDialog]=useState(false);
     const [jobRole,setJobRole]=useState('');
     const [jobDesc,setJobDesc]=useState('');
     const [experience,setExperience]=useState('');
+    const [jsonResponse,setJsonResponse]=useState([]);
 
-    const onSubmit=(e)=>{
+    const onSubmit=async(e)=>{
         e.preventDefault();
         console.log(jobDesc,jobRole,experience)
+
+        const inputPrompt = 'job role:' +jobRole+ ', job description:' + jobDesc + ', job experience:' + experience + '. based on the job position , job description , job experience give me '+process.env.NEXT_PUBLIC_INTERVIEW_QUESTION_COUNT+' questions and answers of that in json format .Give Question and answer field in Json. ';
+
+        try {
+
+          //ithe te apan call karat aho ai la answer sathi 
+            const chatSession = await startInterviewSession();
+            const result = await chatSession.sendMessage(inputPrompt);
+            const mockJsonResp=(result.response.text()).replace('```json','').replace('```','');
+            console.log(mockJsonResp);
+            setJsonResponse(mockJsonResp);
+
+          //inserting into db ithe karat aho
+          if(mockJsonResp){
+            const resp = await db.insert(MockInterviewSchema)
+          .values({
+            mockId:uuidv4(),
+            jsonMockResponse:mockJsonResp,
+            jobPosition:jobRole,
+            jobDescription:jobDesc,
+            jobExperience:experience,
+            createdBy:'someone',
+            createdAt:moment().format('DD-MM-YYYY')
+          }).returning({mockId:MockInterviewSchema.mockId});
+          console.log('Inserted interview with mockId:', resp);
+          }else{
+            console.log("Error");
+          }
+          
+
+        } catch (error) {
+            console.error('Error:', error);
+        }
+
     }
 
   return (<>
